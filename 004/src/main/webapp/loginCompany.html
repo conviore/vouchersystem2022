@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>LOGIN YOUR COMPANY</title>
+    <link rel="stylesheet" type="text/css" href="/004/js/jquery-easyui-1.10.0/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="/004/js/jquery-easyui-1.10.0/themes/icon.css">
+   
+	<script type="text/javascript" src="/004/js/jquery-easyui-1.10.0/jquery.min.js"></script>
+	<script type="text/javascript" src="/004/js/jquery-easyui-1.10.0/jquery.easyui.min.js"></script>
+<style type="text/css">
+a:link,a:visited{
+ text-decoration:none;  /*超链接无下划线*/
+}
+a:hover{
+ text-decoration:underline;  /*鼠标放上去有下划线*/
+}
+
+</style>
+</head>
+<body>  
+			
+	<div style="margin:20px 0;"></div>
+	<div class="easyui-panel" title="选择记账公司" data-options="style:{margin:'0 auto'}" style="width:400px">
+		<div style="padding:10px 60px 20px 60px">
+	    <form  id="ff"  class="easyui-form" method="post" >
+	    	<table cellpadding="5">
+	    		<tr>
+	    			<td>选择一个公司:</td>
+	    			<td><input name="companyId" class="easyui-combobox" id="companyId" name="companyId"
+			data-options="valueField:'id',textField:'companyName',url:'/004/company/getCompanies.action'"></input></td>
+	    		</tr>
+	    	</table>
+	    </form>
+	    <div style="text-align:center;padding:5px">
+	    	<a href="javascript:void(0)" class="easyui-linkbutton" onclick="submitForm()">提交</a>
+	    </div>
+	    </div>
+	   <!-- <p text-align:center;line-height: 100px;>选择您要记账的公司，没有清建立新的</p> --> 
+	<a href="/004/insertCompany.html" class="easyui-linkbutton" onclick="submitForm()">增加新公司</a>
+	</div>
+	
+	<script type="text/javascript">
+	function submitForm(){
+//			$('#ff').form('submit');
+			$.messager.progress();	// display the progress bar
+			$('#ff').form('submit', {
+				url: '004/registerCompany.action',
+				onSubmit: function(){
+					var isValid = $(this).form('validate');
+					if (!isValid){
+						alert('data is invalid');
+						$.messager.progress('close');	// hide progress bar while the form is invalid
+					}
+// 					alert('data is valid');
+					return isValid;	// return false will stop the form submission
+				},
+				success: function(data){
+					$.messager.progress('close');	// hide progress bar while submit successfully
+					var obj = eval('(' + data + ')');
+					var result=obj.info;
+					setCookie('companyInfo',obj.companyName,'1'); //(key,value,expiry in days)
+					alert(result);
+					window.location.href='/004/pages/welcome.jsp'
+				}
+			});
+		}
+    function setCookie(key, value, expiry) {
+        var expires = new Date();
+        expires.setTime(expires.getTime() + (expiry * 24 * 60 * 60 * 1000));
+        document.cookie = key + '=' + value + ';expires=' + expires.toUTCString();
+    }
+    function getCookie(key) {
+        var keyValue = document.cookie.match('(^|;) ?' + key + '=([^;]*)(;|$)');
+        return keyValue ? keyValue[2] : null;
+    }
+
+    function eraseCookie(key) {
+        var keyValue = getCookie(key);
+        setCookie(key, keyValue, '-1');
+    }
+		</script>
+</body>
+</html>

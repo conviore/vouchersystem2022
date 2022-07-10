@@ -1,0 +1,30 @@
+package com.tiger.employees.subject.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import com.tiger.employees.subject.po.Subject;
+
+public interface SubjectDao {
+
+	public abstract void addSubject(Subject subject);
+
+	public abstract void updateSubject(Subject subject);
+
+	public abstract Subject querySubjectById(String id);
+	
+	public abstract List<Subject> querySubjects(Map param);
+	
+	public abstract void attachDirty(Subject instance);
+	
+	public abstract void delete(Subject persistentInstance);
+	
+	public abstract Subject findById(java.lang.String id);
+	
+	public abstract String getTotalDirectChildsNumber(String parentId);
+	
+	public abstract String insertInitSubjectData(String companyId);
+	
+
+
+}

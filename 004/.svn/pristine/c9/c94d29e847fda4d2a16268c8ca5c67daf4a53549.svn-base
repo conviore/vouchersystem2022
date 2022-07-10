@@ -1,0 +1,22 @@
+package com.tiger.employees.monthdetail.bo;
+
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+
+import com.tiger.employees.monthdetail.vo.MonthDetailVo;
+import com.tiger.employees.subject.po.Subject;
+
+public interface MonthDeatailBo {
+
+	public abstract List<MonthDetailVo> getMonthDetailList(Map param);
+	
+	public abstract InputStream getMonthDetailExcel(Map param);
+	
+	public abstract List<Subject> getSubject4Combolbox(Map param);
+	
+	public abstract String getSubjectName(String subjectId);
+	
+	public abstract List<MonthDetailVo> getMonDetailList(Map param);
+	
+}

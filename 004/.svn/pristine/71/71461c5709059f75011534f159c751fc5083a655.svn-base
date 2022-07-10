@@ -1,0 +1,36 @@
+/**
+ * 
+ */
+package com.tiger.employees.monsettleprog.dao;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import com.tiger.employees.monsettleprog.po.MonthSettleProgress;
+import com.tiger.employees.voucherdetail.po.VoucherDetail;
+import com.tiger.utilities.StringUtil;
+
+/**
+ * @author zx
+ *
+ */
+public interface MonthSettleProgressDao {
+	
+	public abstract List<MonthSettleProgress> getMSPs(Map param) ;
+
+
+	public abstract MonthSettleProgress getMSPById(String id) ;
+
+
+	public  abstract void addMSP(MonthSettleProgress msp) ;
+
+
+	public abstract void updateMSP(MonthSettleProgress msp) ;
+	
+	public List<Object> execSql(String sql);
+	
+	public String execDmlSql(String sql);
+
+
+}

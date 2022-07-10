@@ -1,0 +1,25 @@
+package com.tiger.employees.settledetail.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import com.tiger.employees.settledetail.po.SettleDetail;
+
+public interface SettleDetailDao {
+	
+	public abstract void beginTrans();
+
+	public abstract void attachDirty(SettleDetail instance);
+	
+	public abstract void save(SettleDetail settleDetail);
+	
+	public abstract void update(SettleDetail settleDetail);
+	
+	public abstract void delete(SettleDetail settleDetail);
+	
+	public abstract List<SettleDetail> queryList(Map param);
+	
+	public abstract void commitTrans();
+		
+	
+}

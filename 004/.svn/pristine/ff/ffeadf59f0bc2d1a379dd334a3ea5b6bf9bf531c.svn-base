@@ -1,0 +1,25 @@
+package com.tiger.employees.balance.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import com.tiger.employees.balance.po.Balance;
+
+public interface BalanceDao {
+	
+	public void addBalance(Balance balance);
+	
+	public void addListBalance(List<Balance> balance);
+	
+	public void updateBalance(Balance balance);
+	
+	public void updateListBalance(List<Balance> balance);
+	
+	public Balance getBalance(String balanceId);
+	
+	public List<Balance> getListBalance(Map params);
+	
+	public List<Object> execSql(String sql);
+	
+	
+}

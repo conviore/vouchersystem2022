@@ -1,0 +1,32 @@
+package com.tiger.employees.voucherdetail.bo;
+
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+
+import com.tiger.employees.voucherdetail.po.VoucherDetail;
+import com.tiger.employees.voucherdetail.vo.VoucherDetailVo;
+
+public interface VoucherDetailBo {
+public abstract List<VoucherDetail> getDetailList(Map param);
+	
+	public abstract List<VoucherDetailVo> getDetailListVo(Map param);
+	
+	public abstract VoucherDetail getDetailById(String id);
+	
+	public abstract void insertVoucherDetail(VoucherDetail vd);
+	
+	public abstract void modifyVoucherDetail(VoucherDetail vd);
+	
+	public abstract void deleteVoucherDetail(VoucherDetail vd);
+	
+	public abstract void insertDetailList(List<VoucherDetail> vdl);
+	
+	public abstract void modifyDetailList(List<VoucherDetail> vdl);
+	
+	public abstract void deleteDetailList(List<VoucherDetail> vdl);
+	
+	public abstract InputStream getVoucherSummaryExcel(Map param);
+	
+	public abstract List<VoucherDetailVo> getVoucherSummary(Map param);
+}

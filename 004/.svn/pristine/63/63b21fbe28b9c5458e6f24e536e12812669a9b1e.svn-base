@@ -1,0 +1,458 @@
+package com.tiger.employees.monsettleprog.bo;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.hssf.util.Region;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.tiger.employees.balanceitem.dao.BalanceItemDao;
+import com.tiger.employees.balanceitem.po.BalanceItem;
+import com.tiger.employees.balanceitem.vo.BalanceItemVo;
+import com.tiger.employees.monsettleprog.dao.MonthSettleProgressDao;
+import com.tiger.employees.monsettleprog.po.MonthSettleProgress;
+import com.tiger.employees.voucherdetail.vo.VoucherDetailVo;
+import com.tiger.utilities.ExcelUtil;
+import com.tiger.utilities.SettleConfig;
+import com.tiger.utilities.StringUtil;
+import com.tiger.utilities.TimeUtil;
+
+public class MonthSettleProgressBoImpl implements MonthSettleProgressBo {
+
+	private final static String ITEM_TYPE_SYMBOL_ASSET="zichan";
+	private final static String ITEM_TYPE_SYMBOL_LIBILITIES="fuzhai";
+	
+	@Autowired
+	private MonthSettleProgressDao monthSettleProgressDao;
+	
+	@Autowired
+	private BalanceItemDao balanceItemDao;
+	
+	
+
+	public List<MonthSettleProgress> getMSPs(Map param) {
+		// TODO Auto-generated method stub
+		List<MonthSettleProgress> resultList=null;
+		resultList=this.monthSettleProgressDao.getMSPs(param);
+		return resultList;
+	}
+
+	public MonthSettleProgress getMSPById(String id) {
+		// TODO Auto-generated method stub
+		MonthSettleProgress po=null;
+		po=this.monthSettleProgressDao.getMSPById(id);
+		return po;
+	}
+
+	public void addMSP(MonthSettleProgress msp) {
+		// TODO Auto-generated method stub
+		String mspId=UUID.randomUUID().toString();
+		if(msp!=null){
+			msp.setId(mspId);
+			msp.setCreateTime(TimeUtil.getCurrentTime17ByMillis());
+			this.monthSettleProgressDao.addMSP(msp);
+		}
+		
+	}
+
+	public void updateMSP(MonthSettleProgress msp) {
+		// TODO Auto-generated method stub
+		this.monthSettleProgressDao.updateMSP(msp);
+		
+	}
+
+	/**
+	 * 月结后开始新的月份结帐
+	 */
+	public void addMonSettleProg(Map inputParam) {
+		// TODO Auto-generated method stub
+		
+		//查看是否有未月结的记录
+//		Map param=new HashMap();
+//		param.put("status", SettleConfig.MON_SETTLE_INCOMPLETE);
+//		List<MonthSettleProgress> mspList=this.monthSettleProgressDao.getMSPs(param);
+//		if(mspList==null){
+//			
+//		}
+		String companyId=inputParam.get("companyId").toString();
+		String sql="select max(concat(settle_year,settle_month)) as aname from month_settle_progress where company_id='"+companyId+"'";
+		List<Object> maxMonthObjectList=this.monthSettleProgressDao.execSql(sql);
+		String currentSettleDate=maxMonthObjectList.get(0).toString();
+		String currentSettleMonth=currentSettleDate.substring(4, 6);
+		String currentSettleYear=currentSettleDate.substring(0, 4);
+		String newSettleMonth=null;
+		String newSettleYear=null;
+		int currentSettleMonthInt=Integer.valueOf(currentSettleMonth);
+		int currentSettleYearInt=Integer.valueOf(currentSettleYear);
+		if(currentSettleMonthInt<12){
+			
+			newSettleMonth=String.valueOf(currentSettleMonthInt+1);
+			if(currentSettleMonthInt<9){
+				newSettleMonth="0"+""+newSettleMonth;
+			}
+			
+			newSettleYear=currentSettleYear;
+		}
+		else{
+			newSettleMonth="01";
+			newSettleYear=String.valueOf(currentSettleYearInt+1);
+		}
+		
+		MonthSettleProgress msp=new MonthSettleProgress();
+		msp.setCompanyId(companyId);
+		msp.setId(UUID.randomUUID().toString());
+		msp.setCreateTime(TimeUtil.getCurrentTime17ByMillis());
+		msp.setUpdateTime(TimeUtil.getCurrentTime17ByMillis());
+		msp.setSettleMonth(newSettleMonth);
+		msp.setSettleYear(newSettleYear);
+		msp.setStatus(SettleConfig.MON_SETTLE_INCOMPLETE);
+		this.monthSettleProgressDao.addMSP(msp);
+		
+	}
+
+	public InputStream getBalanceSheetExcel(Map param) {
+		if(param!=null){
+//			//获得报表数据
+			String companyName=(String) param.get("companyName");
+//			param.remove("companyName");
+//			List<VoucherDetailVo> vdList=this.getVoucherSummary(param);
+//			String settleDate=(String) param.get("settleTime");
+        List<BalanceItemVo> assetList=this.getBalanceAssetsData(param);
+        List<BalanceItemVo> liabList=this.getBalanceLiabilitiesData(param);
+			/**
+			 * 制作报表
+			 */
+			HSSFWorkbook workbook = new HSSFWorkbook();  
+	        HSSFSheet sheet = workbook.createSheet("sheet1");  
+	        sheet.setColumnWidth((int) 0, (int) 5100);
+	        sheet.setColumnWidth((int) 1, (int) 800);
+	        sheet.setColumnWidth((int) 2, (int) 3300);
+	        sheet.setColumnWidth((int) 3, (int) 3300);
+	        sheet.setColumnWidth((int) 4, (int) 5100);
+	        sheet.setColumnWidth((int) 5, (int) 800);
+	        sheet.setColumnWidth((int) 6, (int) 3300);
+	        sheet.setColumnWidth((int) 7, (int) 3300);
+	        
+	        {  
+	            // 创建表头
+	        	HSSFFont topFont = workbook.createFont();
+	        	topFont.setFontName("宋体");
+	        	topFont.setFontHeightInPoints((short) 16);
+	        	topFont.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);//加粗 
+	        	
+	        	HSSFFont topFont2 = workbook.createFont();
+	        	topFont2.setFontName("宋体");
+	        	topFont2.setFontHeightInPoints((short) 10);
+	        	topFont2.setBoldweight(HSSFFont.BOLDWEIGHT_NORMAL);//加粗 
+	        	
+	             
+	        	HSSFCellStyle topStyle=ExcelUtil.getColContentStyle(workbook);
+	        	HSSFCellStyle topStyle2=ExcelUtil.getColContentStyle(workbook);
+	        	topStyle.setFont(topFont);
+	            HSSFRow row = sheet.createRow(0);
+	            row.setHeight((short)600);
+	            HSSFCell cell = row.createCell((short) 0);  
+	            cell.setCellValue("资产负债表");
+	            cell.setCellStyle(topStyle);
+	            cell = row.createCell((short) 3);  
+	            cell.setCellValue("字第   号");  
+	            topStyle2.setFont(topFont2);
+	            cell.setCellStyle(topStyle2);
+	            cell = row.createCell((short) 4);
+
+	            row = sheet.createRow(1);
+	            row.setHeight((short)450);
+	            
+	            cell = row.createCell((short) 0);  
+	            cell.setCellValue("编制单位： "); 
+	            cell.setCellStyle(topStyle2);
+	            
+	            cell = row.createCell((short) 3);  
+//	            cell.setCellValue(settleDate.substring(0, 4)+"年"+settleDate.substring(4,6)+"月"+settleDate.substring(6, 8)+"日"); 
+	            cell.setCellStyle(topStyle2);
+	            
+	            cell = row.createCell((short) 7);  
+	            cell.setCellValue("单位：元"); 
+	            cell.setCellStyle(topStyle2);
+	            
+	            //创建列头
+	            HSSFFont colHeadFont = workbook.createFont();
+	            colHeadFont.setFontName("宋体");
+	            colHeadFont.setFontHeightInPoints((short) 10);
+	            HSSFCellStyle colHeadStyle=ExcelUtil.getColHeaderStyle(workbook);
+	            colHeadStyle.setFont(colHeadFont);
+	            row = sheet.createRow(2);
+	            row.setHeight((short)450);
+	            cell = row.createCell((short) 0);  
+	            cell.setCellValue("资产");
+	            HSSFCellStyle colHeadStyle2=ExcelUtil.getColHeaderStyle(workbook);
+//	            colHeadStyle2.setBorderLeft(HSSFCellStyle.BORDER_DOUBLE);
+//	            colHeadStyle2.setBorderTop(HSSFCellStyle.BORDER_DOUBLE);
+	            cell.setCellStyle(colHeadStyle2);
+	            cell = row.createCell((short) 1);  
+	            cell.setCellValue("批次");
+	            HSSFCellStyle colHeadStyle3=ExcelUtil.getColHeaderStyle(workbook);
+//	            colHeadStyle3.setBorderTop(HSSFCellStyle.BORDER_DOUBLE);
+	            cell.setCellStyle(colHeadStyle3);
+	            cell = row.createCell((short) 2);  
+	            cell.setCellValue("期末余额");
+	            HSSFCellStyle colHeadStyle4=ExcelUtil.getColHeaderStyle(workbook);
+//	            colHeadStyle4.setBorderTop(HSSFCellStyle.BORDER_DOUBLE);
+	            cell.setCellStyle(colHeadStyle4);
+	            cell = row.createCell((short) 3);
+	            cell.setCellValue("年初余额");
+	            HSSFCellStyle colHeadStyle5=ExcelUtil.getColHeaderStyle(workbook);
+	            cell.setCellStyle(colHeadStyle5);
+	            
+	            cell = row.createCell((short) 4);  
+	            cell.setCellValue("负债与所有着权益");
+//	            colHeadStyle2.setBorderLeft(HSSFCellStyle.BORDER_DOUBLE);
+//	            colHeadStyle2.setBorderTop(HSSFCellStyle.BORDER_DOUBLE);
+	            cell.setCellStyle(colHeadStyle2);
+	            cell = row.createCell((short) 5);  
+	            cell.setCellValue("批次");
+//	            colHeadStyle3.setBorderTop(HSSFCellStyle.BORDER_DOUBLE);
+	            cell.setCellStyle(colHeadStyle3);
+	            cell = row.createCell((short) 6);  
+	            cell.setCellValue("期末余额");
+//	            colHeadStyle4.setBorderTop(HSSFCellStyle.BORDER_DOUBLE);
+	            cell.setCellStyle(colHeadStyle4);
+	            cell = row.createCell((short) 7);
+	            cell.setCellValue("年初余额");
+	            cell.setCellStyle(colHeadStyle5);
+	            
+
+	            
+	            HSSFCellStyle colContentStyle=ExcelUtil.getColContentStyle(workbook);
+	            HSSFCellStyle colContentStyleL=ExcelUtil.getColContentStyle(workbook);
+	            HSSFCellStyle colContentStyleR=ExcelUtil.getColContentStyle(workbook);
+	            
+	            row = sheet.createRow(3);
+	            cell = row.createCell((short) 0); 
+	            cell.setCellValue("流动资产");
+	            cell.setCellStyle(colContentStyle);
+	            cell = row.createCell((short) 4); 
+	            cell.setCellValue("流动负债");
+	            cell.setCellStyle(colContentStyle);
+	            // 创建数据  
+	            // 左面 资产类
+
+	            BalanceItemVo asset=null;
+	            for(int i=0;i<assetList.size();i++){
+	            	row = sheet.createRow(i+4);
+	            	row.setHeight((short)450);
+	            	asset=assetList.get(i);
+	            	cell = row.createCell((short) 0);  
+//		            cell.setCellValue("项目表"); 
+	            	cell.setCellValue(asset.getItemName());
+	            	cell.setCellStyle(colContentStyleL);
+		            cell = row.createCell((short) 1);  
+//		            cell.setCellValue("行次");
+		            cell.setCellValue(asset.getItemNo());
+		            cell.setCellStyle(colContentStyle);
+		            cell = row.createCell((short) 2);  
+//		            cell.setCellValue("期末余额");
+		            if(asset.getEndBalance()==null){
+		            	if(!StringUtil.isEmpty(asset.getFomula())){
+		            		cell.setCellFormula(asset.getFomula());
+		            	}
+		            }
+		            else{
+		            	cell.setCellValue(asset.getEndBalance().doubleValue());
+		            }
+		            cell.setCellStyle(colContentStyle);
+		            cell = row.createCell((short) 3);  
+//		            cell.setCellValue("年初余额");
+		            if(asset.getInitYearBalance()==null){
+		            	if(!StringUtil.isEmpty(asset.getFomula())){
+		            		cell.setCellFormula(asset.getFomula().replace("C", "D"));
+		            	}
+		            }
+		            else{
+		            	cell.setCellValue(asset.getInitYearBalance().doubleValue());
+		            }
+		            cell.setCellStyle(colContentStyleR);
+		            
+	            }
+	            
+	         // 右面 负债类
+	            
+	            BalanceItemVo liab=null;
+	            for(int i=0;i<liabList.size();i++){
+	            	row = sheet.getRow(i+4);
+	            	row.setHeight((short)450);
+	            	liab=liabList.get(i);
+	            	cell = row.createCell((short) 4);  
+//		            cell.setCellValue("项目表"); 
+	            	cell.setCellValue(liab.getItemName());
+	            	cell.setCellStyle(colContentStyleL);
+		            cell = row.createCell((short) 5);  
+//		            cell.setCellValue("行次");
+		            cell.setCellValue(liab.getItemNo());
+		            cell.setCellStyle(colContentStyle);
+		            cell = row.createCell((short) 6);  
+//		            cell.setCellValue("期末余额");
+		            if(liab.getEndBalance()==null){
+		            	if(!StringUtil.isEmpty(liab.getFomula())){
+		            		cell.setCellFormula(liab.getFomula());
+		            	}
+		            }
+		            else{
+		            	cell.setCellValue(liab.getEndBalance().doubleValue());
+		            }
+		            cell.setCellStyle(colContentStyle);
+		            cell = row.createCell((short) 7);  
+//		            cell.setCellValue("年初余额");
+		            if(liab.getInitYearBalance()==null){
+		            	if(!StringUtil.isEmpty(liab.getFomula())){
+		            		String newFormula=liab.getFomula().replace('C', 'D');
+		            		cell.setCellFormula(newFormula);
+		            	}
+		            }
+		            else{
+		            	cell.setCellValue(liab.getInitYearBalance().doubleValue());
+		            }
+		            cell.setCellStyle(colContentStyleR);
+		            
+	            }
+	            
+	            
+	            //合并单元格
+	            Region topRegion1 = new Region(0, (short) 0, 0, (short) 7);
+	            sheet.addMergedRegion(topRegion1);
+//	            Region topRegion2 = new Region(1, (short) 0, 1, (short) 2);
+//	            sheet.addMergedRegion(topRegion2);
+	            
+	        }  
+	 
+	        ByteArrayOutputStream baos = new ByteArrayOutputStream();  
+	        try {  
+	            workbook.write(baos);  
+	            baos.flush();
+	            baos.close();
+	            byte[] ba = baos.toByteArray();  
+	            ByteArrayInputStream bais = new ByteArrayInputStream(ba);  
+	            return bais;  
+	        } catch (IOException e) {  
+	            // TODO Auto-generated catch block  
+	            e.printStackTrace();  
+	            return null;
+	        }  
+		}
+		return null;}
+	
+	/**
+	 * 准备资产类类数据
+	 * @param param
+	 * @return
+	 */
+	private List<BalanceItemVo> getBalanceAssetsData(Map param){
+		List<BalanceItemVo> resultList=new ArrayList();
+		String orgId=(String) param.get("orgId");
+		String settleTime=(String) param.get("settleTime");
+		Map queryItemMap=new HashMap();
+		queryItemMap.put("itemType", this.ITEM_TYPE_SYMBOL_ASSET);
+		List<BalanceItem> itemList=this.balanceItemDao.getBalanceItems(queryItemMap);
+		if(itemList!=null){
+			for(BalanceItem po:itemList){
+				BalanceItemVo vo= new BalanceItemVo(po);
+				if(vo.getIfFomula().equals(SettleConfig.if_fomula_false)){
+					if(!StringUtil.isEmpty(vo.getRelatedCode())){
+						String querySql="select ifnull(sum(init_year_balance),0),ifnull(sum(end_balance),0) from balance where subject_code in ("+vo.getRelatedCode()+") and org_id='"+orgId+"' and settle_time like '"+settleTime+"%'";
+					    List<Object> sumList=this.monthSettleProgressDao.execSql(querySql);
+						Object[] sumArray=(Object[]) sumList.get(0);
+						BigDecimal initYearValue=(BigDecimal) sumArray[0];
+						BigDecimal finalValue=(BigDecimal) sumArray[1];
+						vo.setInitYearBalance(initYearValue);
+						vo.setEndBalance(finalValue);
+					}
+				}else{
+					if(vo.getItemNo().equals("15")){
+						vo.setFomula("SUM(C5:C13)");
+					}
+					else if(vo.getItemNo().equals("29")){
+						vo.setFomula("SUM(C20:C21)+SUM(C24:C32)");
+					}
+					else if(vo.getItemNo().equals("30")){
+						vo.setFomula("C19+C33");
+					}
+				}
+				
+				resultList.add(vo);
+			}
+			return resultList;
+		}
+		return null;
+	}
+	
+	/**
+	 * 准备负债类数据
+	 * @param param
+	 * @return
+	 */
+	private List<BalanceItemVo> getBalanceLiabilitiesData(Map param){
+		List<BalanceItemVo> resultList=new ArrayList();
+		String orgId=(String) param.get("orgId");
+		String settleTime=(String) param.get("settleTime");
+		Map queryItemMap=new HashMap();
+		queryItemMap.put("itemType", this.ITEM_TYPE_SYMBOL_LIBILITIES);
+		List<BalanceItem> itemList=this.balanceItemDao.getBalanceItems(queryItemMap);
+		if(itemList!=null){
+			for(BalanceItem po:itemList){
+				BalanceItemVo vo= new BalanceItemVo(po);
+				if(vo.getIfFomula().equals(SettleConfig.if_fomula_false)){
+					if(!StringUtil.isEmpty(vo.getRelatedCode())){
+						String querySql="select ifnull(sum(init_year_balance),0),ifnull(sum(end_balance),0) from balance where subject_code in ("+vo.getRelatedCode()+") and org_id='"+orgId+"' and settle_time like '"+settleTime+"%'";
+					    List<Object> sumList=this.monthSettleProgressDao.execSql(querySql);
+						Object[] sumArray=(Object[]) sumList.get(0);
+						BigDecimal initYearValue=(BigDecimal) sumArray[0];
+						BigDecimal finalValue=(BigDecimal) sumArray[1];
+						vo.setInitYearBalance(initYearValue);
+						vo.setEndBalance(finalValue);
+					}
+				}else{
+					if(vo.getItemNo().equals("42")){
+						vo.setFomula("SUM(G5:G14)");
+					}
+					else if(vo.getItemNo().equals("46")){
+						vo.setFomula("SUM(G17:G20)");
+					}
+					else if(vo.getItemNo().equals("47")){
+						vo.setFomula("G15+G21");
+					}
+					else if(vo.getItemNo().equals("52")){
+						vo.setFomula("SUM(G24:G27)");
+					}
+					else if(vo.getItemNo().equals("53")){
+						vo.setFomula("G22+G28");
+					}
+					
+				}
+				
+				resultList.add(vo);
+			}
+			return resultList;
+		}
+		return null;
+	}
+
+	public void initAccountingDirection() {
+		// TODO Auto-generated method stub
+		this.monthSettleProgressDao.execDmlSql("update subject set accounting_direction='-1' where code like '2%'");
+		this.monthSettleProgressDao.execDmlSql("update subject set accounting_direction='-1' where code like '3%'");
+	}
+}

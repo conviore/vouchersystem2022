@@ -1,0 +1,25 @@
+/**
+ * 
+ */
+package com.tiger.employees.employees.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import com.tiger.employees.employees.po.Employees;
+
+/**
+ * @author zx
+ *
+ */
+public interface EmployeesDao {
+
+	public abstract int delete(String id);
+	
+	public abstract Employees getEmpById(String id);
+	
+	public abstract List<Employees> getEmps(Map params);
+	
+	public abstract void addEmp(Employees emp);
+	
+}

@@ -1,0 +1,27 @@
+package com.tiger.employees.monsettleprog.bo;
+
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+
+import com.tiger.employees.monsettleprog.po.MonthSettleProgress;
+
+public interface MonthSettleProgressBo {
+
+	public abstract List<MonthSettleProgress> getMSPs(Map param);
+	
+	public abstract MonthSettleProgress getMSPById(String id);
+	
+	public abstract void addMSP(MonthSettleProgress msp);
+	
+	public abstract void updateMSP(MonthSettleProgress msp);
+	
+	//月结后开始新的月份结帐
+	public abstract void addMonSettleProg(Map param);
+	
+	public abstract InputStream getBalanceSheetExcel(Map param);
+	
+	public abstract void initAccountingDirection();
+	
+	
+}

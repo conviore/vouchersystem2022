@@ -1,0 +1,33 @@
+package com.tiger.employees.voucherdetail.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.hibernate.SQLQuery;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+
+import com.tiger.employees.voucher.po.Voucher;
+import com.tiger.employees.voucherdetail.po.VoucherDetail;
+
+public interface VoucherDetailDao {
+
+	public abstract List<VoucherDetail> getVoucherDetails(Map param);
+	
+	public abstract VoucherDetail getVoucherDetailById(String id);
+	
+	public abstract void addVoucherDetail(VoucherDetail vd);
+	
+	public abstract void updateVoucherDetail(VoucherDetail vd);
+	
+	public abstract void addVoucherDetailList(List<VoucherDetail> vdl);
+	
+	public abstract void updateVoucherDetailList(List<VoucherDetail> vdl);
+	
+	public List<Object> execSql(String sql);
+	
+	public abstract void deleteVoucherDetail(VoucherDetail vd);
+	
+	public abstract void deleteVoucherDetailList(List<VoucherDetail> vdl);
+	
+}

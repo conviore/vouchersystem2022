@@ -1,0 +1,26 @@
+package com.tiger.employees.settledetail.bo;
+
+import java.util.List;
+import java.util.Map;
+
+import com.tiger.employees.settledetail.po.SettleDetail;
+
+public interface SettleDetailBo {
+
+	public abstract void saveDetail(SettleDetail po);
+	
+	public abstract void deleteDetail(SettleDetail po);
+	
+	public abstract void updateDetail(SettleDetail po);
+	
+	public abstract List<SettleDetail> getDetailList(Map param);
+	
+	public abstract void insertDetailList(List<SettleDetail> SettleDetails);
+	
+	public abstract void updateDetailList(List<SettleDetail> SettleDetails);
+	
+	public abstract void deleteDetailList(List<SettleDetail> SettleDetails);
+	
+	
+	
+}

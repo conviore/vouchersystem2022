@@ -1,0 +1,21 @@
+package com.tiger.employees.voucher.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import com.tiger.employees.voucher.po.Voucher;
+
+public interface VoucherDao {
+	public abstract List<Voucher> getVouchers(Map param);
+	
+	public abstract Voucher getVoucherById(String id);
+	
+	public abstract void addVoucher(Voucher msp);
+	
+	public abstract void updateVoucher(Voucher msp);
+	
+	public abstract void deleteVoucher(Voucher msp);
+	
+	public abstract List<Object> execSql(String sql);
+
+}

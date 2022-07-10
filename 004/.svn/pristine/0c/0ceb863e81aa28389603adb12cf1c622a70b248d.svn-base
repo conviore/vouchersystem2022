@@ -1,0 +1,25 @@
+package com.tiger.employees.subject.bo;
+
+import java.util.List;
+import java.util.Map;
+
+import com.tiger.employees.subject.po.Subject;
+
+public interface SubjectBo {
+
+	public abstract List<Subject> getSubjects(Map param);
+	
+	public abstract void addSubject(Subject subject);
+	
+	public abstract void updateSubject(Subject subject);
+	
+	public abstract Subject getSubjectById(String id);
+	
+	public abstract String getTotalDirectChildsNumber(String parentId);
+	
+	public abstract String initCompanySubject(String companyId);
+	
+	public Subject addMissSubject(Map param);
+	
+	
+}

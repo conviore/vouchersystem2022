@@ -1,0 +1,37 @@
+package com.tiger.employees.balance.bo;
+
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+
+import com.tiger.employees.balance.po.Balance;
+
+public interface BalanceBo {
+
+	public abstract void saveBalance(Balance balance);
+	
+	public abstract Balance getBalanceById(String id);
+	
+	public abstract List<Balance> getBalances(Map param);
+	
+	public abstract InputStream getBalanceExcel(Map param);
+	
+	public abstract void saveListBalances(List<Balance> balance);
+	
+	/**
+	 * 月结
+	 * @param param
+	 */
+	public abstract void endMonSettle(Map param);
+	
+	/**
+	 * 生成科目汇总
+	 * @param param
+	 * @return
+	 */
+	public abstract List<Balance> generateSubjectSummary(Map param);
+	
+	
+	
+	
+}

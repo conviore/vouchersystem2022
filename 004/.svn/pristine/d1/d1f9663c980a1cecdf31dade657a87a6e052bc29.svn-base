@@ -1,0 +1,17 @@
+package com.tiger.employees.company.bo;
+
+import java.util.List;
+
+import com.tiger.employees.company.po.Company;
+
+public interface CompanyBo {
+
+	public abstract List<Company> getListCompany();
+	
+	public abstract Company getCompanyById(String id);
+	
+	public abstract void saveCompany(Company comp);
+
+	public abstract void updateCompany(Company comp);
+		
+}

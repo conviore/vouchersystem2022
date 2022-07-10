@@ -1,0 +1,19 @@
+package com.tiger.employees.company.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import com.tiger.employees.company.po.Company;
+import com.tiger.employees.employees.po.Employees;
+
+public interface CompanyDao {
+	public abstract int delete(String id);
+	
+	public abstract Company getCompanyById(String id);
+	
+	public abstract List<Company> getCompanies(Map params);
+	
+	public abstract void addCompany(Company comp);
+	
+	public abstract void updateCompany(Company comp);
+}
